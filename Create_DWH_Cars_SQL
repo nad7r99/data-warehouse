@@ -1,0 +1,298 @@
+use ETL_cars
+
+
+select * from Silver_ETL_cars
+
+
+------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+
+
+
+
+
+create table Silver_cars(
+ 
+    year INT,
+    make varchar(25),
+    model varchar(30),
+    `trim` varchar(60),
+    body varchar(40),
+    transmission varchar(15),
+    vin varchar(100),
+    state varchar(30),
+    `condition` int,
+    odometer int,
+    color varchar(15),
+    interior varchar(15),
+    seller varchar(50),
+    mmr int ,
+    selllingprice int ,
+    saledate DATE 
+
+);
+
+
+
+select * from Silver_cars
+
+
+--------------------------
+create table gold_dim_cars(
+ 
+    car_id int auto_increment primary key,
+    year INT,
+    make varchar(25),
+    model varchar(30),
+    trim_car varchar(60),
+    body varchar(40),
+    transmission varchar(15),
+    color varchar(15),
+    interior varchar(15)
+    
+);
+
+
+
+insert into gold_dim_cars(`year`, make, model, trim_car, body, transmission, color, interior)
+
+select distinct `year`, make, model, `trim`, body, transmission, color, interior 
+from Silver_ETL_cars
+
+select * from gold_dim_cars
+
+
+------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+
+
+create table gold_dim_date(
+
+   date_id int PRIMARY key auto_increment,
+   saledate DATE 
+   
+);
+
+
+
+insert into gold_dim_date(saledate)
+
+select DISTINCT saledate from Silver_ETL_cars
+
+
+select * from gold_dim_date
+
+------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+
+
+create table gold_dim_seller(
+
+  sell_id int primary key auto_increment,
+  seller_name varchar(100)
+  
+);
+
+
+insert into gold_dim_seller(seller_name)
+
+SELECT distinct seller from Silver_ETL_cars
+
+
+select * from gold_dim_seller
+
+
+
+------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+
+
+create TABLE gold_dim_state(
+
+   state_id int primary key auto_increment,
+   state_name varchar(30)
+   
+);
+
+
+insert into gold_dim_state(state_name)
+
+select distinct state from Silver_ETL_cars
+
+
+select * from gold_dim_state
+
+
+------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+
+
+
+
+create table gold_fact_car(
+  
+  cars_sk int primary key auto_increment,
+  odometer int,
+  mmr int,
+  sellingprice int,
+  cond int,
+  
+  car_id int,
+  state_id int,
+  date_id int,
+  sell_id int,
+  
+  
+  foreign key (car_id) references gold_dim_cars(car_id),
+  foreign key (date_id) references gold_dim_date(date_id),
+  foreign key (state_id) references gold_dim_state(state_id),
+  foreign key (sell_id) REFERENCES  gold_dim_seller(sell_id)
+  
+);
+
+
+
+
+insert into gold_fact_car(odometer, mmr, sellingprice, cond, car_id, state_id, date_id, sell_id)
+
+select odometer, mmr, sellingprice, `condition`, car_id, state_id, date_id, sell_id 
+
+from Silver_ETL_cars ses
+
+join gold_dim_cars gds on ses.year = gds.year and ses.make = gds.make and ses.model = gds.model and ses.trim = gds.trim_car and ses.body = gds.body 
+                                              and ses.transmission= gds.transmission and ses.color = gds.color and ses.interior = gds.interior
+
+join gold_dim_date gdd on gdd.saledate = ses.saledate
+
+join gold_dim_seller gdr on gdr.seller_name = ses.seller
+
+join gold_dim_state gdt on gdt.state_name = ses.state
+
+
+
+
+
+
+
+select * from gold_fact_car
+
+
+select * from Silver_ETL_cars
+
+
+
+------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+
+
+select  gdc.year, gdc.make, gdc.model, gdc.trim_car, gdc.body, gdc.transmission ,gds.state_name, gfc.cond, gfc.odometer, gdc.color,gdc.interior, gdr.seller_name, gdd.saledate
+                ,gfc.mmr,gfc.sellingprice, gdd.saledate
+                
+from gold_fact_car gfc 
+
+join gold_dim_state gds  on gds.state_id = gfc.state_id 
+
+join gold_dim_seller gdr on gdr.sell_id = gfc.sell_id
+
+join gold_dim_date gdd   on gdd.date_id = gfc.date_id 
+
+join gold_dim_cars gdc   on gdc.car_id = gfc.car_id
+
+where gdc.make = 'Bmw' and gfc.sellingprice = 30500 and gfc.mmr = 32200
+
+
+
+
+select * from Silver_ETL_cars ses
+where make = 'Bmw' and sellingprice =30500 and mmr = 32200         --- الداتا كلها زى بعضضضض كدا الشغل مظبوووووط
+order by ses.sellingprice desc
+
+
+------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+
+
+select gdr.seller_name, sum(gfc.sellingprice) as total_sales
+
+from gold_dim_seller gdr join gold_fact_car gfc on gdr.sell_id = gfc.sell_id
+
+group by seller_name
+
+having total_sales > 1500000
+
+
+
+------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+
+select *,
+
+   row_number()over(partition by sellingprice) as rankeeee
+   
+from gold_fact_car
+
+
+select * from gold_fact_car 
+
+where cond = 1 
+order by sellingprice asc limit 5
+
+
+select *,
+
+   rank()over(partition by sellingprice order by cond) as rankeeee
+   
+from gold_fact_car
+
+
+
+select *,
+
+   dense_rank()over(partition by sellingprice order by cond) as rankeeee
+   
+from gold_fact_car
+
+
+------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+
+
+select *,
+
+  case 
+  	when sellingprice > 150000 then 'high'
+  	when sellingprice < 100000 then 'low'
+  	else 'meduim'
+  end
+  
+ 
+from gold_fact_car  
+
+order by sellingprice desc
+
+
+
+------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+
+use ETL_cars
+
+create schema ETL_cars.Bronze
+
+
+
+create index gold_dim_carssss on gold_dim_cars(make)
+
+
+SELECT  * from gold_dim_cars
+
+
+
+
+create view vw_gold_dim_car
+as 
+select * from gold_dim_cars
+
+
+select * FROM  vw_gold_dim_car
+
