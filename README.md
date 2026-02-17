@@ -18,7 +18,7 @@ Storage : Used the database as storage but it most use (S3 from AWS)
 
 
 
-processing : ETL is stand to Extract,transform,and load , i used Pandas liberary in python and Pyspark 
+processing : ETL is stand to Extract,transform,and load , i used Pandas liberary in python and Pyspark to achieve 6 concepts of Data Quality (consistency, validty, uniqueness, completeness, timelines, accuracy)
 
 
 
