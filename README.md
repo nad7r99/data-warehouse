@@ -26,4 +26,11 @@ Modeling : Star Schema to seperate the table into tables to build the data wareh
            Bronze schema is for Raw data ,Silver Schema is for transformed data, gold Schema is for dashborads.
 
 
+
            
+Tools :
+   Python (pandas lib)
+   Mysql 
+   Pyspark
+   
+   
