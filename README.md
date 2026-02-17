@@ -34,6 +34,8 @@ Tools :
    Pyspark,
    Dbeaver,
 
+
+OS : linux
 Version : Ubuntu 24.04   
    
    
