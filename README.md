@@ -29,8 +29,8 @@ Modeling : Star Schema to seperate the table into tables to build the data wareh
 
            
 Tools :
-   Python (pandas lib)
-   Mysql 
+   Python (pandas lib),
+   Mysql ,
    Pyspark
    
    
